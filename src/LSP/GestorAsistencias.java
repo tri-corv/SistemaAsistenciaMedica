@@ -11,6 +11,10 @@ public class GestorAsistencias {
         asistencias.add(asistencia);
     }
 
+    public List<AsistenciaMedica> listarTodas() {
+        return List.copyOf(asistencias);
+    }
+
     public List<AsistenciaMedica> listarPendientes() {
         return asistencias.stream()
                 .filter(asistencia -> asistencia.getEstado() == EstadoAsistencia.PENDIENTE)

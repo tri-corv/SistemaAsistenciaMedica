@@ -31,10 +31,14 @@ public abstract class AsistenciaMedica {
     }
 
     public final void atender() {
-        estado = EstadoAsistencia.ATENDIDA;
+        marcarAtendida();
         System.out.println(resumen());
         System.out.println("Indicacion: " + obtenerIndicacion());
         System.out.println();
+    }
+
+    public final void marcarAtendida() {
+        estado = EstadoAsistencia.ATENDIDA;
     }
 
     public final String resumen() {
