@@ -10,19 +10,19 @@ import java.util.List;
 import java.util.Optional;
 
 public class PacienteDAO {
-    public Paciente guardar(String nombre, String dni, String cobertura) throws SQLException {
-        String sql = "INSERT INTO pacientes (nombre, dni, cobertura) VALUES (?, ?, ?)";
+    public Paciente guardar(String nombre, String dni, ObraSocial obraSocial) throws SQLException {
+        String sql = "INSERT INTO pacientes (nombre, dni, obra_social_id) VALUES (?, ?, ?)";
 
         try (Connection conexion = ConexionBD.obtenerConexion();
              PreparedStatement sentencia = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             sentencia.setString(1, nombre);
             sentencia.setString(2, dni);
-            sentencia.setString(3, cobertura);
+            sentencia.setInt(3, obraSocial.getId());
             sentencia.executeUpdate();
 
             try (ResultSet claves = sentencia.getGeneratedKeys()) {
                 if (claves.next()) {
-                    return new Paciente(claves.getInt(1), nombre, dni, cobertura);
+                    return new Paciente(claves.getInt(1), nombre, dni, obraSocial);
                 }
             }
         }
@@ -31,7 +31,14 @@ public class PacienteDAO {
     }
 
     public List<Paciente> listarTodos() throws SQLException {
-        String sql = "SELECT id, nombre, dni, cobertura FROM pacientes ORDER BY id";
+        String sql = """
+                SELECT p.id, p.nombre, p.dni,
+                       os.id AS obra_social_id, os.nombre AS obra_social_nombre,
+                       os.porcentaje_cobertura AS obra_social_porcentaje
+                FROM pacientes p
+                INNER JOIN obras_sociales os ON os.id = p.obra_social_id
+                ORDER BY p.id
+                """;
         List<Paciente> pacientes = new ArrayList<>();
 
         try (Connection conexion = ConexionBD.obtenerConexion();
@@ -46,7 +53,14 @@ public class PacienteDAO {
     }
 
     public Optional<Paciente> buscarPorId(int id) throws SQLException {
-        String sql = "SELECT id, nombre, dni, cobertura FROM pacientes WHERE id = ?";
+        String sql = """
+                SELECT p.id, p.nombre, p.dni,
+                       os.id AS obra_social_id, os.nombre AS obra_social_nombre,
+                       os.porcentaje_cobertura AS obra_social_porcentaje
+                FROM pacientes p
+                INNER JOIN obras_sociales os ON os.id = p.obra_social_id
+                WHERE p.id = ?
+                """;
 
         try (Connection conexion = ConexionBD.obtenerConexion();
              PreparedStatement sentencia = conexion.prepareStatement(sql)) {
@@ -63,11 +77,17 @@ public class PacienteDAO {
     }
 
     private Paciente mapear(ResultSet resultado) throws SQLException {
+        ObraSocial obraSocial = new ObraSocial(
+                resultado.getInt("obra_social_id"),
+                resultado.getString("obra_social_nombre"),
+                resultado.getDouble("obra_social_porcentaje")
+        );
+
         return new Paciente(
                 resultado.getInt("id"),
                 resultado.getString("nombre"),
                 resultado.getString("dni"),
-                resultado.getString("cobertura")
+                obraSocial
         );
     }
 }

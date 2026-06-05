@@ -3,6 +3,8 @@ package LSP;
 import java.time.LocalDateTime;
 
 public class Telemedicina extends AsistenciaMedica {
+    private static final double VALOR_CONSULTA = 9000;
+
     private final String enlaceVideollamada;
 
     public Telemedicina(int id, Paciente paciente, Profesional profesional, LocalDateTime fechaHora, String enlaceVideollamada) {
@@ -13,6 +15,11 @@ public class Telemedicina extends AsistenciaMedica {
     @Override
     public String obtenerTipo() {
         return "Telemedicina";
+    }
+
+    @Override
+    public double obtenerValorConsulta() {
+        return VALOR_CONSULTA;
     }
 
     @Override

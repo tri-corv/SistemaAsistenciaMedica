@@ -8,6 +8,9 @@ El programa ya usa JDBC para guardar y leer datos desde MySQL.
 2. Importar `database/schema.sql` en phpMyAdmin.
 3. Agregar el conector JDBC de MySQL al proyecto Java.
 
+Si la base ya estaba creada antes de agregar obras sociales, ejecutar tambien
+`database/migracion-obras-sociales.sql` desde phpMyAdmin.
+
 ## Datos de conexion usados
 
 ```text
@@ -16,6 +19,26 @@ Host: localhost
 Puerto: 3306
 Usuario: root
 Clave: vacia
+```
+
+## Cobertura de obra social
+
+La tabla `obras_sociales` guarda el porcentaje de cobertura. Cada paciente se
+relaciona con una obra social mediante `pacientes.obra_social_id`.
+
+El calculo se realiza en Java:
+
+```text
+monto obra social = valor consulta * porcentaje cobertura / 100
+monto paciente = valor consulta - monto obra social
+```
+
+Valores de consulta usados:
+
+```text
+Consulta general: 12000
+Emergencia: 30000
+Telemedicina: 9000
 ```
 
 Estos datos estan en `src/LSP/ConexionBD.java`.

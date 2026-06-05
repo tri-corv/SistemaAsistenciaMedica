@@ -14,11 +14,14 @@ import java.util.Optional;
 public class AsistenciaMedicaDAO {
     private static final String SELECT_BASE = """
             SELECT a.id, a.tipo, a.fecha_hora, a.estado, a.consultorio, a.nivel_urgencia, a.enlace_videollamada,
-                   p.id AS paciente_id, p.nombre AS paciente_nombre, p.dni AS paciente_dni, p.cobertura AS paciente_cobertura,
+                   p.id AS paciente_id, p.nombre AS paciente_nombre, p.dni AS paciente_dni,
+                   os.id AS obra_social_id, os.nombre AS obra_social_nombre,
+                   os.porcentaje_cobertura AS obra_social_porcentaje,
                    pr.id AS profesional_id, pr.nombre AS profesional_nombre, pr.especialidad AS profesional_especialidad,
                    pr.matricula AS profesional_matricula
             FROM asistencias_medicas a
             INNER JOIN pacientes p ON p.id = a.paciente_id
+            INNER JOIN obras_sociales os ON os.id = p.obra_social_id
             INNER JOIN profesionales pr ON pr.id = a.profesional_id
             """;
 
@@ -119,11 +122,17 @@ public class AsistenciaMedicaDAO {
     }
 
     private AsistenciaMedica mapear(ResultSet resultado) throws SQLException {
+        ObraSocial obraSocial = new ObraSocial(
+                resultado.getInt("obra_social_id"),
+                resultado.getString("obra_social_nombre"),
+                resultado.getDouble("obra_social_porcentaje")
+        );
+
         Paciente paciente = new Paciente(
                 resultado.getInt("paciente_id"),
                 resultado.getString("paciente_nombre"),
                 resultado.getString("paciente_dni"),
-                resultado.getString("paciente_cobertura")
+                obraSocial
         );
 
         Profesional profesional = new Profesional(

@@ -4,13 +4,13 @@ public class Paciente {
     private final int id;
     private final String nombre;
     private final String dni;
-    private final String cobertura;
+    private final ObraSocial obraSocial;
 
-    public Paciente(int id, String nombre, String dni, String cobertura) {
+    public Paciente(int id, String nombre, String dni, ObraSocial obraSocial) {
         this.id = id;
         this.nombre = nombre;
         this.dni = dni;
-        this.cobertura = cobertura;
+        this.obraSocial = obraSocial;
     }
 
     public int getId() {
@@ -25,7 +25,7 @@ public class Paciente {
         return dni;
     }
 
-    public String getCobertura() {
-        return cobertura;
+    public ObraSocial getObraSocial() {
+        return obraSocial;
     }
 }

@@ -3,6 +3,8 @@ package LSP;
 import java.time.LocalDateTime;
 
 public class Emergencia extends AsistenciaMedica {
+    private static final double VALOR_CONSULTA = 30000;
+
     private final NivelUrgencia nivelUrgencia;
 
     public Emergencia(int id, Paciente paciente, Profesional profesional, LocalDateTime fechaHora, NivelUrgencia nivelUrgencia) {
@@ -13,6 +15,11 @@ public class Emergencia extends AsistenciaMedica {
     @Override
     public String obtenerTipo() {
         return "Emergencia " + nivelUrgencia;
+    }
+
+    @Override
+    public double obtenerValorConsulta() {
+        return VALOR_CONSULTA;
     }
 
     @Override

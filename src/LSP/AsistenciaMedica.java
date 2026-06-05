@@ -33,6 +33,7 @@ public abstract class AsistenciaMedica {
     public final void atender() {
         marcarAtendida();
         System.out.println(resumen());
+        System.out.println(detallePago());
         System.out.println("Indicacion: " + obtenerIndicacion());
         System.out.println();
     }
@@ -45,7 +46,29 @@ public abstract class AsistenciaMedica {
         return "[" + id + "] " + obtenerTipo() + " | Paciente: " + paciente.getNombre()
                 + " | Profesional: " + profesional.getNombre()
                 + " | Fecha: " + fechaHora.format(FORMATO_FECHA)
-                + " | Estado: " + estado;
+                + " | Estado: " + estado
+                + " | Total: $" + formatearImporte(obtenerValorConsulta())
+                + " | Paciente paga: $" + formatearImporte(calcularMontoPaciente())
+                + " | Obra social cubre: $" + formatearImporte(calcularMontoObraSocial());
+    }
+
+    public final String detallePago() {
+        ObraSocial obraSocial = paciente.getObraSocial();
+        return "Pago: " + obraSocial.getNombre() + " cubre " + obraSocial.getPorcentajeCobertura()
+                + "% ($" + formatearImporte(calcularMontoObraSocial()) + ")"
+                + " y el paciente paga $" + formatearImporte(calcularMontoPaciente()) + ".";
+    }
+
+    public final double calcularMontoObraSocial() {
+        return obtenerValorConsulta() * paciente.getObraSocial().getPorcentajeCobertura() / 100;
+    }
+
+    public final double calcularMontoPaciente() {
+        return obtenerValorConsulta() - calcularMontoObraSocial();
+    }
+
+    private String formatearImporte(double importe) {
+        return String.format("%.2f", importe);
     }
 
     public final int getId() {
@@ -69,6 +92,8 @@ public abstract class AsistenciaMedica {
     }
 
     public abstract String obtenerTipo();
+
+    public abstract double obtenerValorConsulta();
 
     protected abstract String obtenerIndicacion();
 }

@@ -2,14 +2,21 @@
 
 ```mermaid
 erDiagram
+    OBRAS_SOCIALES ||--o{ PACIENTES : cubre
     PACIENTES ||--o{ ASISTENCIAS_MEDICAS : solicita
     PROFESIONALES ||--o{ ASISTENCIAS_MEDICAS : atiende
+
+    OBRAS_SOCIALES {
+        int id PK
+        varchar nombre UK
+        decimal porcentaje_cobertura
+    }
 
     PACIENTES {
         int id PK
         varchar nombre
         varchar dni UK
-        varchar cobertura
+        int obra_social_id FK
     }
 
     PROFESIONALES {

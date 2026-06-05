@@ -1,11 +1,21 @@
 CREATE DATABASE IF NOT EXISTS asistencia_medica;
 USE asistencia_medica;
 
+CREATE TABLE obras_sociales (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL UNIQUE,
+    porcentaje_cobertura DECIMAL(5,2) NOT NULL,
+    CONSTRAINT chk_porcentaje_cobertura
+        CHECK (porcentaje_cobertura >= 0 AND porcentaje_cobertura <= 100)
+);
+
 CREATE TABLE pacientes (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     dni VARCHAR(20) NOT NULL UNIQUE,
-    cobertura VARCHAR(80) NOT NULL
+    obra_social_id INT NOT NULL,
+    CONSTRAINT fk_paciente_obra_social
+        FOREIGN KEY (obra_social_id) REFERENCES obras_sociales(id)
 );
 
 CREATE TABLE profesionales (
@@ -31,10 +41,15 @@ CREATE TABLE asistencias_medicas (
         FOREIGN KEY (profesional_id) REFERENCES profesionales(id)
 );
 
-INSERT INTO pacientes (nombre, dni, cobertura) VALUES
-('Ana Gomez', '35123456', 'OSDE'),
-('Luis Perez', '28777888', 'Swiss Medical'),
-('Marta Ruiz', '40999111', 'Particular');
+INSERT INTO obras_sociales (nombre, porcentaje_cobertura) VALUES
+('OSDE', 70.00),
+('Swiss Medical', 60.00),
+('Particular', 0.00);
+
+INSERT INTO pacientes (nombre, dni, obra_social_id) VALUES
+('Ana Gomez', '35123456', 1),
+('Luis Perez', '28777888', 2),
+('Marta Ruiz', '40999111', 3);
 
 INSERT INTO profesionales (nombre, especialidad, matricula) VALUES
 ('Dra. Laura Medina', 'Clinica medica', 'MP-1020'),

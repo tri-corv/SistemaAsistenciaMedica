@@ -12,6 +12,7 @@ public class Menu {
     private static final DateTimeFormatter FORMATO_ENTRADA = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     private final Scanner scanner = new Scanner(System.in);
+    private final ObraSocialDAO obraSocialDAO = new ObraSocialDAO();
     private final PacienteDAO pacienteDAO = new PacienteDAO();
     private final ProfesionalDAO profesionalDAO = new ProfesionalDAO();
     private final AsistenciaMedicaDAO asistenciaDAO = new AsistenciaMedicaDAO();
@@ -48,6 +49,8 @@ public class Menu {
         System.out.println("5. Atender asistencias pendientes");
         System.out.println("6. Buscar asistencia por ID");
         System.out.println("7. Listar todas las asistencias");
+        System.out.println("8. Registrar obra social");
+        System.out.println("9. Listar obras sociales");
         System.out.println("0. Salir");
     }
 
@@ -61,6 +64,8 @@ public class Menu {
                 case 5 -> atenderPendientes();
                 case 6 -> buscarAsistencia();
                 case 7 -> listarTodas();
+                case 8 -> registrarObraSocial();
+                case 9 -> listarObrasSociales();
                 case 0 -> System.out.println("Saliendo del sistema.");
                 default -> System.out.println("Opcion invalida.");
             }
@@ -71,14 +76,29 @@ public class Menu {
     }
 
     private void registrarPaciente() throws SQLException {
+        if (obraSocialDAO.listarTodas().isEmpty()) {
+            System.out.println("Debe registrar al menos una obra social antes de registrar pacientes.");
+            return;
+        }
+
         System.out.println();
         System.out.println("--- Registrar paciente ---");
         String nombre = leerTexto("Nombre: ");
         String dni = leerTexto("DNI: ");
-        String cobertura = leerTexto("Cobertura medica: ");
+        ObraSocial obraSocial = seleccionarObraSocial();
 
-        Paciente paciente = pacienteDAO.guardar(nombre, dni, cobertura);
+        Paciente paciente = pacienteDAO.guardar(nombre, dni, obraSocial);
         System.out.println("Paciente registrado con ID " + paciente.getId() + ".");
+    }
+
+    private void registrarObraSocial() throws SQLException {
+        System.out.println();
+        System.out.println("--- Registrar obra social ---");
+        String nombre = leerTexto("Nombre: ");
+        double porcentaje = leerPorcentaje("Porcentaje de cobertura: ");
+
+        ObraSocial obraSocial = obraSocialDAO.guardar(nombre, porcentaje);
+        System.out.println("Obra social registrada con ID " + obraSocial.getId() + ".");
     }
 
     private void registrarProfesional() throws SQLException {
@@ -142,7 +162,9 @@ public class Menu {
         List<Paciente> pacientes = pacienteDAO.listarTodos();
         System.out.println("Pacientes disponibles:");
         pacientes.forEach(paciente -> System.out.println(paciente.getId() + ". " + paciente.getNombre()
-                + " | DNI: " + paciente.getDni()));
+                + " | DNI: " + paciente.getDni()
+                + " | Obra social: " + paciente.getObraSocial().getNombre()
+                + " (" + paciente.getObraSocial().getPorcentajeCobertura() + "%)"));
 
         while (true) {
             int id = leerEntero("ID del paciente: ");
@@ -153,6 +175,24 @@ public class Menu {
                 return paciente.get();
             }
             System.out.println("No existe un paciente con ese ID.");
+        }
+    }
+
+    private ObraSocial seleccionarObraSocial() throws SQLException {
+        List<ObraSocial> obrasSociales = obraSocialDAO.listarTodas();
+        System.out.println("Obras sociales disponibles:");
+        obrasSociales.forEach(obraSocial -> System.out.println(obraSocial.getId() + ". " + obraSocial.getNombre()
+                + " | Cobertura: " + obraSocial.getPorcentajeCobertura() + "%"));
+
+        while (true) {
+            int id = leerEntero("ID de la obra social: ");
+            Optional<ObraSocial> obraSocial = obrasSociales.stream()
+                    .filter(item -> item.getId() == id)
+                    .findFirst();
+            if (obraSocial.isPresent()) {
+                return obraSocial.get();
+            }
+            System.out.println("No existe una obra social con ese ID.");
         }
     }
 
@@ -252,12 +292,40 @@ public class Menu {
         asistencias.forEach(asistencia -> System.out.println(asistencia.resumen()));
     }
 
+    private void listarObrasSociales() throws SQLException {
+        System.out.println();
+        System.out.println("--- Obras sociales ---");
+        List<ObraSocial> obrasSociales = obraSocialDAO.listarTodas();
+        if (obrasSociales.isEmpty()) {
+            System.out.println("No hay obras sociales registradas.");
+            return;
+        }
+        obrasSociales.forEach(obraSocial -> System.out.println(obraSocial.getId() + ". " + obraSocial.getNombre()
+                + " | Cobertura: " + obraSocial.getPorcentajeCobertura() + "%"));
+    }
+
     private int leerEntero(String mensaje) {
         while (true) {
             System.out.print(mensaje);
             String valor = scanner.nextLine();
             try {
                 return Integer.parseInt(valor);
+            } catch (NumberFormatException error) {
+                System.out.println("Debe ingresar un numero.");
+            }
+        }
+    }
+
+    private double leerPorcentaje(String mensaje) {
+        while (true) {
+            System.out.print(mensaje);
+            String valor = scanner.nextLine();
+            try {
+                double porcentaje = Double.parseDouble(valor);
+                if (porcentaje >= 0 && porcentaje <= 100) {
+                    return porcentaje;
+                }
+                System.out.println("El porcentaje debe estar entre 0 y 100.");
             } catch (NumberFormatException error) {
                 System.out.println("Debe ingresar un numero.");
             }
