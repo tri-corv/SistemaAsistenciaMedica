@@ -26,4 +26,9 @@ public class ObraSocial {
     public double getPorcentajeCobertura() {
         return porcentajeCobertura;
     }
+
+    @Override
+    public String toString() {
+        return nombre + " (" + porcentajeCobertura + "%)";
+    }
 }

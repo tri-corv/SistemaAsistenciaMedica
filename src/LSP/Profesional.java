@@ -28,4 +28,9 @@ public class Profesional {
     public String getMatricula() {
         return matricula;
     }
+
+    @Override
+    public String toString() {
+        return nombre + " | " + especialidad;
+    }
 }

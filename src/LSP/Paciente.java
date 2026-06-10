@@ -28,4 +28,9 @@ public class Paciente {
     public ObraSocial getObraSocial() {
         return obraSocial;
     }
+
+    @Override
+    public String toString() {
+        return nombre + " | DNI: " + dni + " | " + obraSocial.getNombre();
+    }
 }
