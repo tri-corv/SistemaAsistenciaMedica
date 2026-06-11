@@ -1,4 +1,4 @@
-package LSP;
+package asistenciaMedica.modelo;
 
 public class ObraSocial {
     private final int id;

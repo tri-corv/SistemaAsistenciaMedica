@@ -1,4 +1,15 @@
-package LSP;
+package asistenciaMedica.vista;
+
+import asistenciaMedica.dao.AsistenciaMedicaDAO;
+import asistenciaMedica.dao.ConexionBD;
+import asistenciaMedica.dao.ObraSocialDAO;
+import asistenciaMedica.dao.PacienteDAO;
+import asistenciaMedica.dao.ProfesionalDAO;
+import asistenciaMedica.modelo.AsistenciaMedica;
+import asistenciaMedica.modelo.NivelUrgencia;
+import asistenciaMedica.modelo.ObraSocial;
+import asistenciaMedica.modelo.Paciente;
+import asistenciaMedica.modelo.Profesional;
 
 import java.sql.SQLException;
 import java.time.LocalDateTime;

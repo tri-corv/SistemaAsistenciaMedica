@@ -1,4 +1,7 @@
-package LSP;
+package asistenciaMedica.dao;
+
+import asistenciaMedica.modelo.ObraSocial;
+import asistenciaMedica.modelo.Paciente;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

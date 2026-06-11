@@ -1,4 +1,14 @@
-package LSP;
+package asistenciaMedica.dao;
+
+import asistenciaMedica.modelo.AsistenciaMedica;
+import asistenciaMedica.modelo.ConsultaGeneral;
+import asistenciaMedica.modelo.Emergencia;
+import asistenciaMedica.modelo.EstadoAsistencia;
+import asistenciaMedica.modelo.NivelUrgencia;
+import asistenciaMedica.modelo.ObraSocial;
+import asistenciaMedica.modelo.Paciente;
+import asistenciaMedica.modelo.Profesional;
+import asistenciaMedica.modelo.Telemedicina;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

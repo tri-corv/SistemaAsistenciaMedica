@@ -1,4 +1,4 @@
-package LSP;
+package asistenciaMedica.modelo;
 
 public class Profesional {
     private final int id;

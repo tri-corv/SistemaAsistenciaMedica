@@ -1,4 +1,4 @@
-package LSP;
+package asistenciaMedica.dao;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

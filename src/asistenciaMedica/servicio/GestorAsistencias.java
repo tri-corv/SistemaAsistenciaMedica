@@ -1,4 +1,7 @@
-package LSP;
+package asistenciaMedica.servicio;
+
+import asistenciaMedica.modelo.AsistenciaMedica;
+import asistenciaMedica.modelo.EstadoAsistencia;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,4 +1,4 @@
-package LSP;
+package asistenciaMedica.modelo;
 
 import java.time.LocalDateTime;
 

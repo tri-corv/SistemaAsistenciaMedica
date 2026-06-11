@@ -1,4 +1,6 @@
-package LSP;
+package asistenciaMedica.dao;
+
+import asistenciaMedica.modelo.Profesional;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -9,43 +11,44 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class ObraSocialDAO {
-    public ObraSocial guardar(String nombre, double porcentajeCobertura) throws SQLException {
-        String sql = "INSERT INTO obras_sociales (nombre, porcentaje_cobertura) VALUES (?, ?)";
+public class ProfesionalDAO {
+    public Profesional guardar(String nombre, String especialidad, String matricula) throws SQLException {
+        String sql = "INSERT INTO profesionales (nombre, especialidad, matricula) VALUES (?, ?, ?)";
 
         try (Connection conexion = ConexionBD.obtenerConexion();
              PreparedStatement sentencia = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             sentencia.setString(1, nombre);
-            sentencia.setDouble(2, porcentajeCobertura);
+            sentencia.setString(2, especialidad);
+            sentencia.setString(3, matricula);
             sentencia.executeUpdate();
 
             try (ResultSet claves = sentencia.getGeneratedKeys()) {
                 if (claves.next()) {
-                    return new ObraSocial(claves.getInt(1), nombre, porcentajeCobertura);
+                    return new Profesional(claves.getInt(1), nombre, especialidad, matricula);
                 }
             }
         }
 
-        throw new SQLException("No se pudo obtener el ID generado para la obra social.");
+        throw new SQLException("No se pudo obtener el ID generado para el profesional.");
     }
 
-    public List<ObraSocial> listarTodas() throws SQLException {
-        String sql = "SELECT id, nombre, porcentaje_cobertura FROM obras_sociales ORDER BY id";
-        List<ObraSocial> obrasSociales = new ArrayList<>();
+    public List<Profesional> listarTodos() throws SQLException {
+        String sql = "SELECT id, nombre, especialidad, matricula FROM profesionales ORDER BY id";
+        List<Profesional> profesionales = new ArrayList<>();
 
         try (Connection conexion = ConexionBD.obtenerConexion();
              PreparedStatement sentencia = conexion.prepareStatement(sql);
              ResultSet resultado = sentencia.executeQuery()) {
             while (resultado.next()) {
-                obrasSociales.add(mapear(resultado));
+                profesionales.add(mapear(resultado));
             }
         }
 
-        return obrasSociales;
+        return profesionales;
     }
 
-    public Optional<ObraSocial> buscarPorId(int id) throws SQLException {
-        String sql = "SELECT id, nombre, porcentaje_cobertura FROM obras_sociales WHERE id = ?";
+    public Optional<Profesional> buscarPorId(int id) throws SQLException {
+        String sql = "SELECT id, nombre, especialidad, matricula FROM profesionales WHERE id = ?";
 
         try (Connection conexion = ConexionBD.obtenerConexion();
              PreparedStatement sentencia = conexion.prepareStatement(sql)) {
@@ -61,11 +64,12 @@ public class ObraSocialDAO {
         return Optional.empty();
     }
 
-    private ObraSocial mapear(ResultSet resultado) throws SQLException {
-        return new ObraSocial(
+    private Profesional mapear(ResultSet resultado) throws SQLException {
+        return new Profesional(
                 resultado.getInt("id"),
                 resultado.getString("nombre"),
-                resultado.getDouble("porcentaje_cobertura")
+                resultado.getString("especialidad"),
+                resultado.getString("matricula")
         );
     }
 }
