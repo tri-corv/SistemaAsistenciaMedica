@@ -5,7 +5,10 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class ConexionBD {
-    private static final String URL = "jdbc:mysql://localhost:3306/asistencia_medica?serverTimezone=America/Argentina/Buenos_Aires";
+    private static final String URL = "jdbc:mysql://localhost:3306/asistencia_medica"
+            + "?serverTimezone=America/Argentina/Buenos_Aires"
+            + "&connectTimeout=3000"
+            + "&socketTimeout=3000";
     private static final String USUARIO = "root";
     private static final String CLAVE = "";
 

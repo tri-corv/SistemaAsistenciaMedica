@@ -24,6 +24,7 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.JTableHeader;
@@ -42,6 +43,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 public class VentanaPrincipal extends JFrame {
     private static final DateTimeFormatter FORMATO_ENTRADA = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
@@ -109,14 +111,69 @@ public class VentanaPrincipal extends JFrame {
         super("Sistema de asistencias medicas");
         configurarVentana();
         estilizarComponentes();
-        verificarConexion();
-        recargarCombos();
-        recargarAsistencias();
-        actualizarDashboard();
     }
 
     public static void mostrar() {
-        SwingUtilities.invokeLater(() -> new VentanaPrincipal().setVisible(true));
+        SwingUtilities.invokeLater(() -> {
+            VentanaPrincipal ventana = new VentanaPrincipal();
+            ventana.setVisible(true);
+            ventana.cargarDatosIniciales();
+        });
+    }
+
+    private void cargarDatosIniciales() {
+        new SwingWorker<DatosIniciales, Void>() {
+            @Override
+            protected DatosIniciales doInBackground() throws Exception {
+                ConexionBD.probarConexion();
+                return new DatosIniciales(
+                        obraSocialDAO.listarTodas(),
+                        pacienteDAO.listarTodos(),
+                        profesionalDAO.listarTodos(),
+                        asistenciaDAO.listarTodas(),
+                        asistenciaDAO.listarPendientes()
+                );
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    DatosIniciales datos = get();
+                    recargarCombo(pacienteObraSocialCombo, datos.obrasSociales);
+                    recargarCombo(asistenciaPacienteCombo, datos.pacientes);
+                    recargarCombo(asistenciaProfesionalCombo, datos.profesionales);
+                    cargarTablaAsistencias(datos.asistencias);
+                    actualizarDashboard(datos);
+                } catch (InterruptedException error) {
+                    Thread.currentThread().interrupt();
+                    mostrarError(new SQLException("Se interrumpio la carga inicial de datos."));
+                } catch (ExecutionException error) {
+                    mostrarError(new SQLException("No se pudo conectar a MySQL. Revise XAMPP, la base asistencia_medica y el conector JDBC.\n" + error.getCause().getMessage()));
+                }
+            }
+        }.execute();
+    }
+
+    private static class DatosIniciales {
+        private final List<ObraSocial> obrasSociales;
+        private final List<Paciente> pacientes;
+        private final List<Profesional> profesionales;
+        private final List<AsistenciaMedica> asistencias;
+        private final List<AsistenciaMedica> pendientes;
+
+        private DatosIniciales(
+                List<ObraSocial> obrasSociales,
+                List<Paciente> pacientes,
+                List<Profesional> profesionales,
+                List<AsistenciaMedica> asistencias,
+                List<AsistenciaMedica> pendientes
+        ) {
+            this.obrasSociales = obrasSociales;
+            this.pacientes = pacientes;
+            this.profesionales = profesionales;
+            this.asistencias = asistencias;
+            this.pendientes = pendientes;
+        }
     }
 
     private void configurarVentana() {
@@ -268,8 +325,6 @@ public class VentanaPrincipal extends JFrame {
         panel.add(encabezado, BorderLayout.NORTH);
         panel.add(tarjetas, BorderLayout.CENTER);
 
-        actualizarDashboard();
-
         return panel;
     }
 
@@ -317,6 +372,24 @@ public class VentanaPrincipal extends JFrame {
 
         } catch (SQLException error) {
             mostrarError(error);
+        }
+    }
+
+    private void actualizarDashboard(DatosIniciales datos) {
+        if (totalPacientesLabel != null) {
+            totalPacientesLabel.setText(String.valueOf(datos.pacientes.size()));
+        }
+
+        if (totalProfesionalesLabel != null) {
+            totalProfesionalesLabel.setText(String.valueOf(datos.profesionales.size()));
+        }
+
+        if (totalAsistenciasLabel != null) {
+            totalAsistenciasLabel.setText(String.valueOf(datos.asistencias.size()));
+        }
+
+        if (totalPendientesLabel != null) {
+            totalPendientesLabel.setText(String.valueOf(datos.pendientes.size()));
         }
     }
 
@@ -858,34 +931,64 @@ public class VentanaPrincipal extends JFrame {
         int modeloFila = asistenciasTable.convertRowIndexToModel(fila);
         int id = (Integer) asistenciasModel.getValueAt(modeloFila, 0);
 
-        try {
-            if (!confirmar("¿Desea marcar la asistencia como atendida?")) {
-                return;
-            }
-            asistenciaDAO.marcarAtendida(id);
-            recargarAsistencias();
-            actualizarDashboard();
-            informar("Asistencia marcada como atendida.");
-        } catch (SQLException error) {
-            mostrarError(error);
+        if (!confirmar("¿Desea marcar la asistencia como atendida?")) {
+            return;
         }
+
+        new SwingWorker<Void, Void>() {
+            @Override
+            protected Void doInBackground() throws Exception {
+                asistenciaDAO.marcarAtendida(id);
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    get();
+                    recargarAsistencias();
+                    recargarDashboard();
+                    informar("Asistencia marcada como atendida.");
+                } catch (InterruptedException error) {
+                    Thread.currentThread().interrupt();
+                    mostrarError(new SQLException("Se interrumpio la actualizacion de la asistencia."));
+                } catch (ExecutionException error) {
+                    mostrarError(new SQLException("No se pudo marcar la asistencia como atendida.\n" + error.getCause().getMessage()));
+                }
+            }
+        }.execute();
     }
 
     private void atenderPendientes() {
-        try {
-            List<AsistenciaMedica> pendientes = asistenciaDAO.listarPendientes();
-            if (!confirmar("¿Desea marcar todas las asistencias pendientes como atendidas?")) {
-                return;
-            }
+        if (!confirmar("¿Desea marcar todas las asistencias pendientes como atendidas?")) {
+            return;
+        }
+
+        new SwingWorker<Integer, Void>() {
+            @Override
+            protected Integer doInBackground() throws Exception {
+                List<AsistenciaMedica> pendientes = asistenciaDAO.listarPendientes();
             for (AsistenciaMedica asistencia : pendientes) {
                 asistenciaDAO.marcarAtendida(asistencia.getId());
             }
-            recargarAsistencias();
-            actualizarDashboard();
-            informar("Asistencias pendientes atendidas.");
-        } catch (SQLException error) {
-            mostrarError(error);
-        }
+                return pendientes.size();
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    int cantidad = get();
+                    recargarAsistencias();
+                    recargarDashboard();
+                    informar("Asistencias pendientes atendidas: " + cantidad + ".");
+                } catch (InterruptedException error) {
+                    Thread.currentThread().interrupt();
+                    mostrarError(new SQLException("Se interrumpio la atencion de pendientes."));
+                } catch (ExecutionException error) {
+                    mostrarError(new SQLException("No se pudieron atender las asistencias pendientes.\n" + error.getCause().getMessage()));
+                }
+            }
+        }.execute();
     }
 
     private void recargarCombos() {
@@ -906,28 +1009,71 @@ public class VentanaPrincipal extends JFrame {
     }
 
     private void recargarAsistencias() {
-        try {
-            asistenciasModel.setRowCount(0);
-
-            for (AsistenciaMedica asistencia : asistenciaDAO.listarTodas()) {
-                asistenciasModel.addRow(new Object[]{
-                        asistencia.getId(),
-                        asistencia.obtenerTipo(),
-                        asistencia.getPaciente().getNombre(),
-                        asistencia.getProfesional().getNombre(),
-                        asistencia.getEstado(),
-                        importe(asistencia.obtenerValorConsulta()),
-                        importe(asistencia.calcularMontoPaciente()),
-                        importe(asistencia.calcularMontoObraSocial())
-                });
+        new SwingWorker<List<AsistenciaMedica>, Void>() {
+            @Override
+            protected List<AsistenciaMedica> doInBackground() throws Exception {
+                return asistenciaDAO.listarTodas();
             }
 
-            if (sorter != null) {
-                filtrarAsistencias();
+            @Override
+            protected void done() {
+                try {
+                    cargarTablaAsistencias(get());
+                } catch (InterruptedException error) {
+                    Thread.currentThread().interrupt();
+                    mostrarError(new SQLException("Se interrumpio la carga del listado."));
+                } catch (ExecutionException error) {
+                    mostrarError(new SQLException("No se pudo cargar el listado de asistencias.\n" + error.getCause().getMessage()));
+                }
+            }
+        }.execute();
+    }
+
+    private void recargarDashboard() {
+        new SwingWorker<DatosIniciales, Void>() {
+            @Override
+            protected DatosIniciales doInBackground() throws Exception {
+                return new DatosIniciales(
+                        List.of(),
+                        pacienteDAO.listarTodos(),
+                        profesionalDAO.listarTodos(),
+                        asistenciaDAO.listarTodas(),
+                        asistenciaDAO.listarPendientes()
+                );
             }
 
-        } catch (SQLException error) {
-            mostrarError(error);
+            @Override
+            protected void done() {
+                try {
+                    actualizarDashboard(get());
+                } catch (InterruptedException error) {
+                    Thread.currentThread().interrupt();
+                    mostrarError(new SQLException("Se interrumpio la actualizacion del panel."));
+                } catch (ExecutionException error) {
+                    mostrarError(new SQLException("No se pudo actualizar el panel general.\n" + error.getCause().getMessage()));
+                }
+            }
+        }.execute();
+    }
+
+    private void cargarTablaAsistencias(List<AsistenciaMedica> asistencias) {
+        asistenciasModel.setRowCount(0);
+
+        for (AsistenciaMedica asistencia : asistencias) {
+            asistenciasModel.addRow(new Object[]{
+                    asistencia.getId(),
+                    asistencia.obtenerTipo(),
+                    asistencia.getPaciente().getNombre(),
+                    asistencia.getProfesional().getNombre(),
+                    asistencia.getEstado(),
+                    importe(asistencia.obtenerValorConsulta()),
+                    importe(asistencia.calcularMontoPaciente()),
+                    importe(asistencia.calcularMontoObraSocial())
+            });
+        }
+
+        if (sorter != null) {
+            filtrarAsistencias();
         }
     }
 
@@ -941,11 +1087,13 @@ public class VentanaPrincipal extends JFrame {
         }
     }
 
-    private void verificarConexion() {
+    private boolean verificarConexion() {
         try {
             ConexionBD.probarConexion();
+            return true;
         } catch (SQLException error) {
             mostrarError(new SQLException("No se pudo conectar a MySQL. Revise XAMPP, la base asistencia_medica y el conector JDBC.\n" + error.getMessage()));
+            return false;
         }
     }
 
