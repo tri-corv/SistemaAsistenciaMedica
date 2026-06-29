@@ -7,18 +7,6 @@ import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
-        if (args.length > 0) {
-            if ("consola".equalsIgnoreCase(args[0])) {
-                new Menu().iniciar();
-                return;
-            }
-
-            if ("ventana".equalsIgnoreCase(args[0])) {
-                VentanaPrincipal.mostrar();
-                return;
-            }
-        }
-
         mostrarSelector();
     }
 

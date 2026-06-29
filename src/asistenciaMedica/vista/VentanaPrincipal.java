@@ -218,6 +218,7 @@ public class VentanaPrincipal extends JFrame {
         inicio.addActionListener(e -> {
             seleccionarBotonMenu(inicio);
             mostrarPanel(crearPanelInicio());
+            recargarDashboard();
         });
 
         JButton obras = crearBotonMenu("Obras sociales");

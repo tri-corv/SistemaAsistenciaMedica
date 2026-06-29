@@ -55,13 +55,12 @@ public class Menu {
         System.out.println("=== SISTEMA DE ASISTENCIAS MEDICAS ===");
         System.out.println("1. Registrar paciente");
         System.out.println("2. Registrar profesional");
-        System.out.println("3. Registrar asistencia medica");
-        System.out.println("4. Listar asistencias pendientes");
-        System.out.println("5. Atender asistencias pendientes");
-        System.out.println("6. Buscar asistencia por ID");
-        System.out.println("7. Listar todas las asistencias");
-        System.out.println("8. Registrar obra social");
-        System.out.println("9. Listar obras sociales");
+        System.out.println("3. Registrar obra social");
+        System.out.println("4. Registrar asistencia medica");
+        System.out.println("5. Listar todas las asistencias");
+        System.out.println("6. Listar asistencias pendientes");
+        System.out.println("7. Atender asistencias pendientes");
+        System.out.println("8. Buscar asistencia por ID");
         System.out.println("0. Salir");
     }
 
